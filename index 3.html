@@ -1,0 +1,191 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Expense Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #fffaf0;
+    }
+    h2, h3 {
+      color: #d2691e;
+    }
+    form {
+      margin-bottom: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    input, button {
+      margin: 5px 0;
+      padding: 10px;
+      font-size: 16px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      padding: 8px;
+      border: 1px solid #ccc;
+      text-align: center;
+    }
+    button {
+      background: #ffa500;
+      border: none;
+      color: white;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #ff8c00;
+    }
+    #total {
+      font-weight: bold;
+      font-size: 18px;
+      margin-top: 10px;
+    }
+    .section {
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Ganesh Chaturthi Expense Tracker</h2>
+
+  <div id="role-select">
+    <label>Who are you?</label><br>
+    <button onclick="selectRole('admin')">I'm Admin</button>
+    <button onclick="selectRole('team')">I'm Team Member</button>
+  </div>
+
+  <div id="form-container" style="display:none;">
+    <form id="expense-form">
+      <input type="date" id="date" required>
+      <input type="text" id="purpose" placeholder="Purpose" required>
+      <input type="number" id="amount" placeholder="Amount" required>
+      <input type="text" id="paidBy" placeholder="Paid By" required>
+      <input type="text" id="remarks" placeholder="Remarks (optional)">
+      <button type="submit">Add Expense</button>
+    </form>
+  </div>
+
+  <div class="section">
+    <h3>All Expense Records</h3>
+    <table id="expense-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Purpose</th>
+          <th>Amount</th>
+          <th>Paid By</th>
+          <th>Remarks</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h3>Day-wise Total</h3>
+    <table id="daywise-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Total (₹)</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h3>Grand Total: ₹<span id="total">0</span></h3>
+  </div>
+
+  <script>
+    const form = document.getElementById('expense-form');
+    const tableBody = document.querySelector('#expense-table tbody');
+    const daywiseBody = document.querySelector('#daywise-table tbody');
+    const totalDisplay = document.getElementById('total');
+    const formContainer = document.getElementById('form-container');
+    const roleSelect = document.getElementById('role-select');
+
+    let expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+
+    function renderExpenses() {
+      tableBody.innerHTML = '';
+      daywiseBody.innerHTML = '';
+      let total = 0;
+      let daywiseTotals = {};
+
+      expenses.forEach(exp => {
+        total += Number(exp.amount);
+        const row = `<tr>
+          <td>${exp.date}</td>
+          <td>${exp.purpose}</td>
+          <td>₹${exp.amount}</td>
+          <td>${exp.paidBy}</td>
+          <td>${exp.remarks}</td>
+        </tr>`;
+        tableBody.innerHTML += row;
+
+        if (!daywiseTotals[exp.date]) {
+          daywiseTotals[exp.date] = 0;
+        }
+        daywiseTotals[exp.date] += Number(exp.amount);
+      });
+
+      Object.keys(daywiseTotals).sort().forEach(date => {
+        const row = `<tr>
+          <td>${date}</td>
+          <td>₹${daywiseTotals[date]}</td>
+        </tr>`;
+        daywiseBody.innerHTML += row;
+      });
+
+      totalDisplay.textContent = total;
+    }
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const newExpense = {
+        date: document.getElementById('date').value,
+        purpose: document.getElementById('purpose').value,
+        amount: document.getElementById('amount').value,
+        paidBy: document.getElementById('paidBy').value,
+        remarks: document.getElementById('remarks').value
+      };
+
+      expenses.push(newExpense);
+      localStorage.setItem('expenses', JSON.stringify(expenses));
+      renderExpenses();
+      form.reset();
+    });
+
+    function selectRole(role) {
+      if (role === 'admin') {
+        const password = prompt('Enter Admin Password:');
+        if (password === 'admin123') {
+          roleSelect.style.display = 'none';
+          formContainer.style.display = 'block';
+          renderExpenses();
+        } else {
+          alert('Incorrect password');
+        }
+      } else {
+        roleSelect.style.display = 'none';
+        formContainer.style.display = 'none';
+        renderExpenses();
+      }
+    }
+
+    renderExpenses();
+  </script>
+
+</body>
+</html>
